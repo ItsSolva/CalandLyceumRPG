@@ -1,0 +1,272 @@
+import pygame
+from pygame.display import update
+from pygame.surface import Surface
+from sprites import *
+from teachers import *
+from config import *
+from tilemap import *
+from os import path
+import sys
+
+class Game:
+    def __init__(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.Font("DroidSansMono.TTF", 32)
+        self.running = True
+        
+        #Load all the spritesheets
+        self.character_spritesheet = Spritesheet("img/characterr.png")
+        self.terrain_spritesheet = Spritesheet("img/terrain.png")
+        self.ground_spritesheet = Spritesheet("img/ground_spritesheet.png")
+        self.door_spritesheet = Spritesheet("img/door_spritesheet.png")
+        self.enemy_spritesheet = Spritesheet("img/enemy.png")
+        self.attack_spritesheet = Spritesheet("img/attack.png")
+        self.shuriken_spritesheet = Spritesheet("img/shuriken.png")
+        self.intro_background = pygame.image.load("img/caland2.png").convert()
+
+        #Create some variables
+        self.enemies_left = 0
+        self.player_loc = [1,0]
+
+        #Create all the event objects
+        self.talking = pygame.USEREVENT+1
+        self.talking_event = pygame.event.Event(self.talking, status="start", txt="", message=False)
+        self.open_door = pygame.USEREVENT+2
+        self.door_event = pygame.event.Event(self.open_door, loc="", coords = [])
+        
+    def createTilemap(self, map):
+        #Loop through all the items of the map and check what type of tile it is
+        for i, row in enumerate(map.data):
+            for j, column in enumerate(row):
+                g = Ground(self, j, i, 1, 0)
+                #Create a type of wall tile object
+                if column == "X":
+                    Block(self, j, i, 3, 2)
+                #Create a type of ground path tile object
+                if column == "=":
+                    Ground(self, j, i, 3, 0)
+                #Create a type of wall tile object
+                if column == "Q":
+                    Block(self, j, i, 5, 2)
+                #Create a window glass tile object
+                if column == "G":
+                    Ground(self, j, i, 4, 3)
+                #Create a type of wall tile object
+                if column == "W":
+                    Block(self, j, i, 1, 2)
+                #Create a type of ground path tile object
+                if column == "-":
+                    Ground(self, j, i, 2, 4)
+                #Create an enemy object
+                if column == "E":
+                    Enemy(self, j, i)                  
+                    self.enemies_left += 1
+                #Create a door object and check what direction it's located
+                if column == "D":
+                    if j == 1:
+                        Door(self, j, i, "west")
+                    elif i == 1:
+                        Door(self, j, i, "north")
+                    elif j == map.tilewidth-2:
+                        Door(self, j, i, "east")
+                    elif i == map.tileheight-2:
+                        Door(self, j, i, "south")
+                    else:
+                        Door(self, j, i, "")
+                #Create the Player object
+                if column == "P":
+                    Ground(self, j, i, 5, 1)
+                    self.player = Player(self, j, i)
+                #Create the teacher object Hamersveld
+                if column == "H":
+                    Human(self, j, i, create_human_spritesheet("img/hamersveld.png"), "Hello Player, Welcome to my new game called, CalandRPG. I made this game for a schoolproject and I hope you'll like it! The main goal of this game is to give a good introduction of our school to new students. You have to find the other teachers and talk to them to receive puzzle pieces, once you have collected all of them, you will be rewarded")
+                #Create the teacher object Luken
+                if column == "L":
+                    Human(self, j, i, create_human_spritesheet("img/luken.png"), "Quest: kill all aliens", quest = True)
+                #Create an invisible barrier
+                if column == "~":
+                    g.kill()
+                    Block(self, j, i, 0, 6)
+    
+    #This gets excuted ONCE when the game starts
+    def new(self):        
+        #Create some variables
+        self.playing = True
+        self.map = Map("maps/0/hall0.txt")
+
+        #Create all sprites groups
+        self.all_sprites = pygame.sprite.LayeredUpdates()
+        self.players = pygame.sprite.LayeredUpdates()
+        self.humans = pygame.sprite.LayeredUpdates()
+        self.enemies = pygame.sprite.LayeredUpdates()
+        self.doors = pygame.sprite.LayeredUpdates()
+        self.attacks = pygame.sprite.LayeredUpdates()
+        self.blocks = pygame.sprite.LayeredUpdates()
+        self.grounds = pygame.sprite.LayeredUpdates()
+
+        #Set the camera to the following width/height
+        self.camera = Camera(self.map.width, self.map.height)
+        
+        #Create the map
+        self.createTilemap(self.map)
+
+    def events(self):
+        #game loop events
+        for event in pygame.event.get():
+            #Check wether the close button has been pressed
+            if event.type == pygame.QUIT:
+                self.playing = False
+                self.running = False
+            
+            #Check wether a talking event has been triggered
+            if event.type == self.talking:
+                #Create a textbox object
+                if event.status == "start":
+                    if event.message:
+                        Textbox(self, self.player.rect.x - 150, self.player.rect.y - 200, width = 300, height= 100, txt=event.txt, follow=event.message)
+                    else:
+                        self.player.freezed = True
+                        for e in self.enemies:
+                            e.freezed = True
+                        Textbox(self, self.player.rect.x - 400, self.player.rect.y + 150, txt=event.txt)
+                
+                #Delete the textbox and allow every sprite to move again
+                else:
+                    self.player.freezed = False
+                    for e in self.enemies:
+                        e.freezed = False
+            
+            #Checkw wether a door opening event has been triggered
+            if event.type == self.open_door:
+                #Delete all current tiles and sprites
+                for b in self.all_sprites:
+                    b.kill()
+                
+                #Check which direction the next room should be
+                if event.loc == "east":
+                    self.player_loc[1] += 1
+                elif event.loc == "west":
+                    self.player_loc[1] -= 1
+                elif event.loc == "north":
+                    self.player_loc[0] -= 1
+                elif event.loc == "south":
+                    self.player_loc[0] += 1
+                else:
+                    self.player_loc[1] = 1
+
+                #Load the map file of the new room and load the new map
+                m = Map(f"maps/{self.player_loc[1]}/{map_loc[self.player_loc[0]][self.player_loc[1]]}.txt")
+                self.createTilemap(m)
+
+                #Make the player spawn in front of the next door
+                if event.loc == "east":
+                    for d in self.doors:
+                        if d.loc == "west":
+                            self.player = Player(self, (d.rect.x + 64)/32, d.rect.y/32)
+                elif event.loc == "west":
+                    for d in self.doors:
+                        if d.loc == "east":
+                            self.player = Player(self, (d.rect.x - 64)/32, d.rect.y/32)
+                elif event.loc == "north":
+                    for d in self.doors:
+                        if d.loc == "south":
+                            self.player = Player(self, d.rect.x/32, (d.rect.y - 64)/32)
+                elif event.loc == "south":
+                    for d in self.doors:
+                        if d.loc == "north":
+                            self.player = Player(self, d.rect.x/32, (d.rect.y + 64)/32)
+                else:
+                    self.player = Player(self,3,5)
+            
+            #Check wether the Player is allowed to move
+            if not self.player.freezed:
+                if event.type == pygame.KEYDOWN:
+                    #Check wether the Player has pressed the E key to interact
+                    if event.key == pygame.K_e:
+                        if self.player.facing == "up":
+                            Interaction(self, self.player.rect.x, self.player.rect.y - TILE_SIZE)
+                        if self.player.facing == "down":
+                            Interaction(self, self.player.rect.x, self.player.rect.y + TILE_SIZE)
+                        if self.player.facing == "left":
+                            Interaction(self, self.player.rect.x - TILE_SIZE, self.player.rect.y)
+                        if self.player.facing == "right":
+                            Interaction(self, self.player.rect.x + TILE_SIZE, self.player.rect.y)
+
+                if event.type == pygame.MOUSEBUTTONUP:
+                    #Check wether the Player has pressed the mousebutton to throw a shuriken
+                    if self.player.projectile_counter <= 10:
+                        Shuriken(self, WIN_WIDTH/2-16, WIN_HEIGHT/2-16)
+
+
+    def update(self):
+        #Let every sprite call it's update methode
+        self.all_sprites.update()
+        #Make the camera follow the player
+        self.camera.update(self.player)
+    
+    def draw(self):
+        self.screen.fill(BLACK)
+        #Let every sprite according to the Player's position to make sure that the Player is in the middle of the screen
+        for sprite in self.all_sprites:
+            self.screen.blit(sprite.image, self.camera.apply(sprite))
+        self.clock.tick(FPS)
+        pygame.display.update()
+        
+    def main(self):
+        #Gameloop
+        while self.playing:
+            self.events()
+            self.update()
+            self.draw()
+        
+    #A possible game over screen
+    def game_over(self):
+        pass
+    
+    def intro_screen(self):
+        intro = True
+        
+        #Create the title text
+        title = self.font.render("CalandRPG", False, BLACK)
+        title_rect = title.get_rect(x = int(WIN_WIDTH / 2 - title.get_width() / 2), y = 20)
+
+        #Create the play button object
+        play_button = Button(int(WIN_WIDTH / 2 - 50), 100, 100, 50, WHITE, BLACK, "PLAY", 32)
+
+        while intro:
+            for event in pygame.event.get():
+                #Check wether the close button has been pressed
+                if event.type == pygame.QUIT:
+                    intro = False
+                    self.running = False
+            
+            #Get the position of the mouse and check wether the mousebutton has been pressed 
+            mouse_pos = pygame.mouse.get_pos()
+            mouse_pressed = pygame.mouse.get_pressed()
+
+            #Check wether the mousebutton has been pressed while the mouse is on the play button
+            if play_button.is_pressed(mouse_pos, mouse_pressed):
+                intro = False
+            
+            #Update the screen
+            self.screen.blit(self.intro_background, (0,0))
+            self.screen.blit(title, title_rect)
+            self.screen.blit(play_button.image, play_button.rect)
+            self.clock.tick(FPS)
+
+            pygame.display.update()
+
+
+
+g = Game()
+g.intro_screen()
+g.new()
+
+while g.running:
+    g.main()
+    g.game_over()
+
+pygame.quit
+sys.exit()
