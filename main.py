@@ -81,7 +81,7 @@ class Game:
                     self.player = Player(self, j, i)
                 #Create the teacher object Hamersveld
                 if column == "H":
-                    Human(self, j, i, create_human_spritesheet("img/hamersveld.png"), "Hello Player, Welcome to my new game called, CalandRPG. I made this game for a schoolproject and I hope you'll like it! The main goal of this game is to give a good introduction of our school to new students. You have to find the other teachers and talk to them to receive puzzle pieces, once you have collected all of them, you will be rewarded")
+                    Human(self, j, i, create_human_spritesheet("img/hamersveld.png"), "Hello Player, Welcome to my new game called, CalandRPG. I made this game for a schoolproject and I hope you'll like it! The main goal of this game is to give a good introduction of our school to new students. You have to find the other teachers and talk to them to receive puzzle pieces.")
                 #Create the teacher object Luken
                 if column == "L":
                     Human(self, j, i, create_human_spritesheet("img/luken.png"), "Quest: kill all aliens", quest = True)
@@ -89,6 +89,37 @@ class Game:
                 if column == "~":
                     g.kill()
                     Block(self, j, i, 0, 6)
+    
+    def create_dialogue_text(self, text):
+        #Split the text string into individual words as items of a list
+        txt_split = text.split()
+
+        wordcount = 0
+        text = []
+        line = []
+
+        #Max length per line is 55 characters
+        if len(text) > 55:
+            #Loop through all the words
+            for word in txt_split:
+                #Check wether the max length has been reached
+                if len(word) + wordcount >= 55:
+                    #If the max length has been reached, check if a new line can be added to this page, add the line to the text list, empty the line, and reset the wordcount
+                    text.append(line)
+                    line = []
+                    wordcount = 0
+
+                #Add the word to the line
+                wordcount += len(word)
+                line.append(word)
+
+            #Add the last line to the text list
+            text.append(line)
+        
+        else:
+            text.append(text)
+
+        return text
     
     #This gets excuted ONCE when the game starts
     def new(self):        
@@ -125,12 +156,14 @@ class Game:
                 #Create a textbox object
                 if event.status == "start":
                     if event.message:
-                        Textbox(self, self.player.rect.x - 150, self.player.rect.y - 200, width = 300, height= 100, txt=event.txt, follow=event.message)
+                        txt = self.create_dialogue_text(event.txt)
+                        Textbox(self, self.player.rect.x - 150, self.player.rect.y - 200, width = 300, height= 100, txt=txt, follow=event.message)
                     else:
                         self.player.freezed = True
                         for e in self.enemies:
                             e.freezed = True
-                        Textbox(self, self.player.rect.x - 400, self.player.rect.y + 150, txt=event.txt)
+                        txt = self.create_dialogue_text(event.txt)
+                        Textbox(self, self.player.rect.x - 150, self.player.rect.y - 200, width = 300, height= 100, txt=txt, follow=event.message)                
                 
                 #Delete the textbox and allow every sprite to move again
                 else:
