@@ -1,6 +1,5 @@
 from sprites import Spritesheet
 
-
 def create_human_spritesheet(file):
     spritesheet = Spritesheet(file)
 
