@@ -223,7 +223,7 @@ class Player(pygame.sprite.Sprite):
         self.kill()
 
 class Human(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, image_list, text, quest=False):
+    def __init__(self, game, x, y, image_list, text, name="", quest=False):
         self.game = game
         self._layer = HUMAN_LAYER
         self.groups = self.game.all_sprites, self.game.humans
@@ -236,6 +236,8 @@ class Human(pygame.sprite.Sprite):
 
         self.x_change = 0
         self.y_change = 0
+
+        self.name = name
 
         #Attributes for animation
         self.facing = "down"
@@ -579,6 +581,7 @@ class Interaction(pygame.sprite.Sprite):
             
             #Post the talking event with the dialogue text
             self.game.talking_event.status = "start"
+            self.game.talking_event.entity = hits[0]
             self.game.talking_event.txt = hits[0].text
             pygame.event.post(self.game.talking_event)
 
