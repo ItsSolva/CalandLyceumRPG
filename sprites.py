@@ -725,6 +725,7 @@ class Textbox(pygame.sprite.Sprite):
         
         #Display the text on top of the textbox
         for i, line in enumerate(self.txt):
+            print(line)
             self.txt_surf = self.font.render(" ".join(line), True, self.text_color)
             self.txt_rect = self.txt_surf.get_rect(topleft=(40, 40 + 25*i)) 
             self.image.blit(self.txt_surf, self.txt_rect)

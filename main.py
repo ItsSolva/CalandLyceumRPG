@@ -81,7 +81,7 @@ class Game:
                     self.player = Player(self, j, i)
                 #Create the teacher object Hamersveld
                 if column == "H":
-                    Human(self, j, i, create_human_spritesheet("img/hamersveld.png"), "Hello Player, Welcome to my new game called, CalandRPG. I made this game for a schoolproject and I hope you'll like it! The main goal of this game is to give a good introduction of our school to new students. You have to find the other teachers and talk to them to receive puzzle pieces.")
+                    Human(self, j, i, create_human_spritesheet("img/hamersveld.png"), "Hello Player, Welcome to my new game called, CalandRPG. I made this game for a schoolproject and I hope you'll like it! The main goal of this game is to give a good introduction of our school to new students.")
                 #Create the teacher object Luken
                 if column == "L":
                     Human(self, j, i, create_human_spritesheet("img/luken.png"), "Quest: kill all aliens", quest = True)
