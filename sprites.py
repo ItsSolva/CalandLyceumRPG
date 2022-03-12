@@ -223,7 +223,7 @@ class Player(pygame.sprite.Sprite):
         self.kill()
 
 class Human(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, image_list, text, quest=False):
+    def __init__(self, game, x, y, image_list, text, name="", quest=False):
         self.game = game
         self._layer = HUMAN_LAYER
         self.groups = self.game.all_sprites, self.game.humans
@@ -236,6 +236,8 @@ class Human(pygame.sprite.Sprite):
 
         self.x_change = 0
         self.y_change = 0
+
+        self.name = name
 
         #Attributes for animation
         self.facing = "down"
@@ -579,6 +581,7 @@ class Interaction(pygame.sprite.Sprite):
             
             #Post the talking event with the dialogue text
             self.game.talking_event.status = "start"
+            self.game.talking_event.entity = hits[0]
             self.game.talking_event.txt = hits[0].text
             pygame.event.post(self.game.talking_event)
 
@@ -715,7 +718,7 @@ class Textbox(pygame.sprite.Sprite):
         self.txt_size = txt_size
         self.font = pygame.font.Font("DroidSansMono.ttf", self.txt_size)
         self.text_color = text_color
-        self.txt = self.split_text(txt)
+        self.txt = txt
         self.current_page = 0
         
         #Create the textbox image
@@ -725,6 +728,7 @@ class Textbox(pygame.sprite.Sprite):
         
         #Display the text on top of the textbox
         for i, line in enumerate(self.txt):
+            print(line)
             self.txt_surf = self.font.render(" ".join(line), True, self.text_color)
             self.txt_rect = self.txt_surf.get_rect(topleft=(40, 40 + 25*i)) 
             self.image.blit(self.txt_surf, self.txt_rect)
@@ -739,37 +743,6 @@ class Textbox(pygame.sprite.Sprite):
         self.rect.x += self.game.player.last_x_shifting
         self.rect.y += self.game.player.last_y_shifting
     
-    def split_text(self, txt):
-        #Split the text string into individual words as items of a list
-        txt_split = txt.split()
-
-        wordcount = 0
-        text = []
-        line = []
-
-        #Max length per line is 55 characters
-        if len(txt) > 55:
-            #Loop through all the words
-            for word in txt_split:
-                #Check wether the max length has been reached
-                if len(word) + wordcount >= 55:
-                    #If the max length has been reached, check if a new line can be added to this page, add the line to the text list, empty the line, and reset the wordcount
-                    text.append(line)
-                    line = []
-                    wordcount = 0
-
-                #Add the word to the line
-                wordcount += len(word)
-                line.append(word)
-
-            #Add the last line to the text list
-            text.append(line)
-        
-        else:
-            text.append(txt)
-
-        return text
-
     def skip(self):
         #Check wether the spacebar has been pressed
         keys = pygame.key.get_pressed()
