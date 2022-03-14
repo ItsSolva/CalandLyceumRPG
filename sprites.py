@@ -767,8 +767,8 @@ class Button:
         self.fg = fg
         self.bg = bg
 
-        self.image = pygame.Surface((self.width, self.height))
-        self.image.fill(self.bg)
+        self.image = pygame.image.load("img/button.png")
+        self.image = pygame.transform.scale(self.image, (300,70))
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
