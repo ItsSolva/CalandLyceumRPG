@@ -97,11 +97,11 @@ class Game:
         line = []
 
         #Max length per line is 55 characters
-        if len(txt) > 70:
+        if len(txt) > 30:
             #Loop through all the words
             for word in txt_split:
                 #Check wether the max length has been reached
-                if len(word) + wordcount >= 65:
+                if len(word) + wordcount >= 30:
                     #If the max length has been reached, check if a new line can be added to this page, add the line to the text list, empty the line, and reset the wordcount
                     text.append(line)
                     line = []
@@ -291,7 +291,7 @@ class Game:
                     if option_button.is_pressed(mouse_pos):
                         pass
                     if about_button.is_pressed(mouse_pos):
-                        webbrowser.open('http://google.com')
+                        webbrowser.open('http://calandlyceum.nl')
                     if quit_button.is_pressed(mouse_pos):
                         self.playing = False
                         self.running = False
