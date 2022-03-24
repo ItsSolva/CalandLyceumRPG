@@ -755,7 +755,7 @@ class Textbox(pygame.sprite.Sprite):
             self.kill()
 
 class Button:
-    def __init__(self, x, y, width, height, fg, bg, content, fontsize):
+    def __init__(self, x, y, color, content, fontsize, width=300, height=75):
         self.font = pygame.font.Font("pixel_font.ttf", fontsize)
         self.content = content
 
@@ -764,22 +764,20 @@ class Button:
         self.width = width
         self.height = height
 
-        self.fg = fg
-        self.bg = bg
+        self.color = color
 
         self.image = pygame.image.load("img/button.png")
-        self.image = pygame.transform.scale(self.image, (300,70))
+        self.image = pygame.transform.scale(self.image, (self.width,self.height))
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
 
-        self.text = self.font.render(self.content, False, self.fg)
-        self.text_rect = self.text.get_rect(center=(self.width/2, self.height/2))
+        self.text = self.font.render(self.content, False, self.color)
+        self.text_rect = self.text.get_rect(center=(self.width/2,self.height/2))
+
         self.image.blit(self.text, self.text_rect)
 
-    def is_pressed(self, pos, pressed):
+    def is_pressed(self, pos):
         if self.rect.collidepoint(pos):
-            if pressed[0]:
-                return True
-            return False
+            return True
         return False

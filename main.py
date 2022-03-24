@@ -1,12 +1,10 @@
 import pygame
-from pygame.display import update
-from pygame.surface import Surface
 from sprites import *
 from teachers import *
 from config import *
 from tilemap import *
 from data import *
-from os import path
+import webbrowser
 import sys
 
 class Game:
@@ -25,7 +23,7 @@ class Game:
         self.enemy_spritesheet = Spritesheet("img/enemy.png")
         self.attack_spritesheet = Spritesheet("img/attack.png")
         self.shuriken_spritesheet = Spritesheet("img/shuriken.png")
-        self.intro_background = pygame.image.load("img/caland2.png").convert()
+        self.intro_background = pygame.image.load("img/raspberryham_UI_MAIN_MENU.png").convert()
 
         #Create some variables
         self.enemies_left = 0
@@ -92,9 +90,7 @@ class Game:
                     Block(self, j, i, 0, 6)
     
     def create_dialogue_text(self, txt, entity):
-        npc_text = txt[dialogue_progress[entity]]
-
-        txt_split = txt.split()
+        txt_split = txt
 
         wordcount = 0
         text = []
@@ -153,6 +149,10 @@ class Game:
                 self.playing = False
                 self.running = False
             
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.intro_screen()
+                
             #Check wether a talking event has been triggered
             if event.type == self.talking:
                 #Create a textbox object
@@ -262,13 +262,18 @@ class Game:
     
     def intro_screen(self):
         intro = True
-        
-        #Create the title text
-        title = self.font.render("CalandRPG", False, BLACK)
-        title_rect = title.get_rect(x = int(WIN_WIDTH / 2 - title.get_width() / 2), y = 20)
 
+        buttons = []
+        
         #Create the play button object
-        play_button = Button(int(WIN_WIDTH / 2 - 50), 100, 100, 50, WHITE, BLACK, "PLAY", 32)
+        play_button = Button(75,200, BLACK, "PLAY", 32)
+        buttons.append(play_button)
+        option_button = Button(75,300, BLACK, "OPTIONS", 32) 
+        buttons.append(option_button)
+        about_button = Button(75,400, BLACK, "ABOUT", 32)
+        buttons.append(about_button)
+        quit_button = Button(75,500, BLACK, "QUIT", 32)
+        buttons.append(quit_button)
 
         while intro:
             for event in pygame.event.get():
@@ -276,24 +281,29 @@ class Game:
                 if event.type == pygame.QUIT:
                     intro = False
                     self.running = False
-            
-            #Get the position of the mouse and check wether the mousebutton has been pressed 
-            mouse_pos = pygame.mouse.get_pos()
-            mouse_pressed = pygame.mouse.get_pressed()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    #Get the position of the mouse and check wether the mousebutton has been pressed 
+                    mouse_pos = pygame.mouse.get_pos()
 
-            #Check wether the mousebutton has been pressed while the mouse is on the play button
-            if play_button.is_pressed(mouse_pos, mouse_pressed):
-                intro = False
+                    #Check wether the mousebutton has been pressed while the mouse is on the play button
+                    if play_button.is_pressed(mouse_pos):
+                        intro = False
+                    if option_button.is_pressed(mouse_pos):
+                        pass
+                    if about_button.is_pressed(mouse_pos):
+                        webbrowser.open('http://google.com')
+                    if quit_button.is_pressed(mouse_pos):
+                        self.playing = False
+                        self.running = False
+                        intro = False
             
             #Update the screen
             self.screen.blit(self.intro_background, (0,0))
-            self.screen.blit(title, title_rect)
-            self.screen.blit(play_button.image, play_button.rect)
+            for b in buttons:
+                self.screen.blit(b.image, b.rect)
             self.clock.tick(FPS)
 
             pygame.display.update()
-
-
 
 g = Game()
 g.intro_screen()
@@ -303,5 +313,5 @@ while g.running:
     g.main()
     g.game_over()
 
-pygame.quit
+pygame.quit()
 sys.exit()

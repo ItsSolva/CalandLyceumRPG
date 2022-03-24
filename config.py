@@ -17,5 +17,6 @@ BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 BG_CH_SPRITESHEET = (0, 128, 255) #0080ff
+CALAND_BLUE = (0, 165, 211) #00A5D3
 
 level = 0
