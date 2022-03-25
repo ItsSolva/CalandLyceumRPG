@@ -83,27 +83,31 @@ class Game:
                     Human(self, j, i, create_human_spritesheet("img/hamersveld.png"), HAM_TEXT, name="ham")
                 #Create the teacher object Luken
                 if column == "L":
-                    Human(self, j, i, create_human_spritesheet("img/luken.png"), "Quest: kill all aliens", name="luk",quest = True)
+                    Human(self, j, i, create_human_spritesheet("img/luken.png"), LUK_TEXT, name="luk")
                 #Create an invisible barrier
                 if column == "~":
                     g.kill()
                     Block(self, j, i, 0, 6)
     
     def create_dialogue_text(self, txt, entity):
-        txt_split = txt
+        if entity != "ham":
+            txt_split = random.choice(txt).split()
+        else:
+            txt_split = txt[0].split()
 
         wordcount = 0
         text = []
         line = []
 
         #Max length per line is 55 characters
-        if len(txt) > 30:
+        if len(txt[0]) > 60:
             #Loop through all the words
             for word in txt_split:
                 #Check wether the max length has been reached
-                if len(word) + wordcount >= 30:
+                if len(word) + wordcount >= 60:
                     #If the max length has been reached, check if a new line can be added to this page, add the line to the text list, empty the line, and reset the wordcount
                     text.append(line)
+                    print(line)
                     line = []
                     wordcount = 0
 
@@ -115,7 +119,7 @@ class Game:
             text.append(line)
 
         else:
-            text.append(txt)
+            text.append(txt_split)
 
         return text
     
@@ -165,7 +169,7 @@ class Game:
                         for e in self.enemies:
                             e.freezed = True
                         txt = self.create_dialogue_text(event.txt, entity=event.entity.name)
-                        Textbox(self, self.player.rect.x - 400, self.player.rect.y + 200, width = 800, height= 200, txt=txt)                
+                        Textbox(self, self.player.rect.x - 400, self.player.rect.y + 150, width = 800, height= 200, txt=txt)                
                 
                 #Delete the textbox and allow every sprite to move again
                 else:
@@ -236,7 +240,7 @@ class Game:
 
 
     def update(self):
-        #Let every sprite call it's update methode
+        #Let every sprite call its update methode
         self.all_sprites.update()
         #Make the camera follow the player
         self.camera.update(self.player)
