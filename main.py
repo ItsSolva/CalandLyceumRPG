@@ -107,7 +107,6 @@ class Game:
                 if len(word) + wordcount >= 60:
                     #If the max length has been reached, check if a new line can be added to this page, add the line to the text list, empty the line, and reset the wordcount
                     text.append(line)
-                    print(line)
                     line = []
                     wordcount = 0
 
