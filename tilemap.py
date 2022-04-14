@@ -84,10 +84,3 @@ class Camera:
     def set_width_height(self, width, height):
         self.width = width
         self.height = height
-
-map_loc = [
-    [".",    "NL",   "BIO",  "INF"  ],
-    ["hall0","hall1","hall2","hall3"],
-    [".",    "X",    "X",    "X"    ]
-]
-

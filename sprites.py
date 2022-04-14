@@ -117,7 +117,7 @@ class Player(pygame.sprite.Sprite):
         if self.keys[pygame.K_LSHIFT] and self.sprinting_time < 10 and (self.x_change != 0 or self.y_change != 0):
             self.x_change *= 2
             self.y_change *= 2
-            self.sprinting_time += 0.05
+            #self.sprinting_time += 0.05
             running = True
             self.animation_speed = 0.2
         
@@ -458,6 +458,12 @@ class Block(pygame.sprite.Sprite):
         self.rect.x = self.x
         self.rect.y = self.y
 
+class Table(Block):
+    def __init__(self, game, x, y, sx=0, sy=0):
+        super().__init__(game, x, y, sx, sy)
+        type = random.randrange(1,3)
+        self.image = self.game.ground_spritesheet.get_sprite(6*32, type*32, self.width, self.height)
+
 class Ground(pygame.sprite.Sprite):
     def __init__(self, game, x, y, sx, sy):
         self.game = game
@@ -491,6 +497,8 @@ class Door(pygame.sprite.Sprite):
         self.width = TILE_SIZE
         self.height = TILE_SIZE
 
+        self.collider = Block(self.game, self.x, self.y, 0, 6)
+
         #Create all sprites for animation
         self.image = self.game.door_spritesheet.get_sprite(0, 0, self.width, self.height)
         self.animations = [self.game.door_spritesheet.get_sprite(32, 0, self.width, self.height),
@@ -503,6 +511,7 @@ class Door(pygame.sprite.Sprite):
     
     def door_open(self):
         #Animation for opening the door
+        self.collider.kill()
         self.image = self.animations[math.floor(self.animation_loop)]
         if self.animation_loop < 1.9:
             self.animation_loop += 0.2
@@ -520,7 +529,7 @@ class Door(pygame.sprite.Sprite):
         #Allow the door to open when there are no enemies left
         if self.game.enemies_left <= 0:
             self.door_open()
-        self.collision()
+            self.collision()
 
 class Interaction(pygame.sprite.Sprite):
     def __init__(self, game, x ,y):
@@ -587,7 +596,6 @@ class Interaction(pygame.sprite.Sprite):
 
             self.kill()
 
-                
     def animate(self):
         #Check which direction the Player is facing and create the animation according to that direction
         direction = self.game.player.facing
@@ -700,14 +708,15 @@ class Shuriken(pygame.sprite.Sprite):
             self.animation_loop = 0
 
 class Textbox(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, width=700, height=200, text_color=(0,0,0), txt="", txt_size=15, follow=False):
+    def __init__(self, game, x, y, width=700, height=200, text_color=(0,0,0), txt="", txt_size=18, follow=False, local=False):
         self.game = game
         self._layer = TOP_LAYER
-        self.groups = self.game.all_sprites
+        self.groups = self.game.all_sprites, self.game.textboxes
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         #This attritbute is to check if the textbox has to follow the player
         self.follow = follow
+        self.local = local
 
         self.x = x
         self.y = y
@@ -722,18 +731,17 @@ class Textbox(pygame.sprite.Sprite):
         self.current_page = 0
         
         #Create the textbox image
-        self.image = pygame.image.load("img/dialogue_box_basic.png").convert()
+        self.image = pygame.image.load("img/UI Elements/dialogue_box_basic.png").convert()
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.rect = self.image.get_rect(topleft=[x,y])
         
         #Display the text on top of the textbox
         for i, line in enumerate(self.txt):
             self.txt_surf = self.font.render(" ".join(line), True, self.text_color)
-            self.txt_rect = self.txt_surf.get_rect(topleft=(40, 40 + 25*i)) 
+            self.txt_rect = self.txt_surf.get_rect(topleft=(40, 40 + round(1.6*txt_size*i))) 
             self.image.blit(self.txt_surf, self.txt_rect)
 
     def update(self):
-        self.skip()
         if self.follow:
             self.follow_player()
 
@@ -742,15 +750,8 @@ class Textbox(pygame.sprite.Sprite):
         self.rect.x += self.game.player.last_x_shifting
         self.rect.y += self.game.player.last_y_shifting
     
-    def skip(self):
-        #Check wether the spacebar has been pressed
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
-            #Post the talking event with "stop" as status, which makes the dialogue stop
-            self.game.talking_event.status = "stop"
-            pygame.event.post(self.game.talking_event)
-
-            #Delete the textbox 
+    def destroy(self):
+        if not self.local:
             self.kill()
 
 class Button:
@@ -765,7 +766,7 @@ class Button:
 
         self.color = color
 
-        self.image = pygame.image.load("img/button.png")
+        self.image = pygame.image.load("img/UI Elements/button.png")
         self.image = pygame.transform.scale(self.image, (self.width,self.height))
         self.rect = self.image.get_rect()
         self.rect.x = self.x
