@@ -17,7 +17,6 @@ class Game:
         
         #Load all the spritesheets
         self.character_spritesheet = Spritesheet("img/Entities/characterr.png")
-        self.terrain_spritesheet = Spritesheet("img/Trash/terrain.png")
         self.ground_spritesheet = Spritesheet("img/Map/ground_spritesheet.png")
         self.door_spritesheet = Spritesheet("img/Map/door_spritesheet.png")
         self.enemy_spritesheet = Spritesheet("img/Entities/enemy.png")
